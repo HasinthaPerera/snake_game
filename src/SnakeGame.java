@@ -13,7 +13,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private String direction = "RIGHT";
     private Timer timer;
     private int score = 0;
-    private boolean gameOver = false; // 🔹 Game state
+    private int highScore = 0; // 🔹 High Score variable
+    private boolean gameOver = false;
 
     public SnakeGame() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -47,17 +48,17 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
 
         if (gameOver) {
-            // 🔹 Show Game Over Screen
+            // 🔹 Game Over Screen
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 30));
             g.drawString("GAME OVER", WIDTH / 2 - 90, HEIGHT / 2 - 40);
 
             g.setFont(new Font("Arial", Font.PLAIN, 20));
-            g.drawString("Score: " + score, WIDTH / 2 - 40, HEIGHT / 2);
+            g.drawString("Score: " + score, WIDTH / 2 - 50, HEIGHT / 2);
+            g.drawString("High Score: " + highScore, WIDTH / 2 - 70, HEIGHT / 2 + 30);
 
-            // Draw Restart & Exit instructions
-            g.drawString("Press R to Restart", WIDTH / 2 - 80, HEIGHT / 2 + 40);
-            g.drawString("Press Q to Quit", WIDTH / 2 - 70, HEIGHT / 2 + 70);
+            g.drawString("Press R to Restart", WIDTH / 2 - 80, HEIGHT / 2 + 70);
+            g.drawString("Press Q to Quit", WIDTH / 2 - 70, HEIGHT / 2 + 100);
             return;
         }
 
@@ -71,15 +72,16 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
 
-        // Draw score
+        // Draw score and high score
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 16));
         g.drawString("Score: " + score, 10, 20);
+        g.drawString("High Score: " + highScore, WIDTH - 140, 20);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (gameOver) return; // Stop updates if game over
+        if (gameOver) return;
 
         Point head = new Point(snake.get(0));
         switch (direction) {
@@ -93,18 +95,20 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         if (head.equals(food)) {
             snake.add(0, head);
             score++;
+            if (score > highScore) highScore = score; // 🔹 Update high score
             spawnFood();
         } else {
             snake.add(0, head);
             snake.remove(snake.size() - 1);
         }
 
-        // Check collisions
+        // Check wall collision
         if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
             gameOver = true;
             timer.stop();
         }
 
+        // Check self collision
         for (int i = 1; i < snake.size(); i++) {
             if (head.equals(snake.get(i))) {
                 gameOver = true;
@@ -133,7 +137,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
                 }
             }
         } else {
-            // 🔹 Restart or Quit when Game Over
+            // 🔹 Restart or Quit
             if (e.getKeyCode() == KeyEvent.VK_R) {
                 initGame();
                 timer.start();
