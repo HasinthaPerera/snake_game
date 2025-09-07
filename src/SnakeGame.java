@@ -12,18 +12,28 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private Point food;
     private String direction = "RIGHT";
     private Timer timer;
-    private int score = 0; // 🔹 Score variable
+    private int score = 0;
+    private boolean gameOver = false; // 🔹 Game state
 
     public SnakeGame() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
-        snake.add(new Point(5, 5));
-        spawnFood();
+        initGame();
 
         timer = new Timer(100, this);
         timer.start();
         setFocusable(true);
         addKeyListener(this);
+    }
+
+    // 🔹 Initialize or Restart the Game
+    private void initGame() {
+        snake.clear();
+        snake.add(new Point(5, 5));
+        direction = "RIGHT";
+        score = 0;
+        gameOver = false;
+        spawnFood();
     }
 
     private void spawnFood() {
@@ -36,6 +46,21 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        if (gameOver) {
+            // 🔹 Show Game Over Screen
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 30));
+            g.drawString("GAME OVER", WIDTH / 2 - 90, HEIGHT / 2 - 40);
+
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("Score: " + score, WIDTH / 2 - 40, HEIGHT / 2);
+
+            // Draw Restart & Exit instructions
+            g.drawString("Press R to Restart", WIDTH / 2 - 80, HEIGHT / 2 + 40);
+            g.drawString("Press Q to Quit", WIDTH / 2 - 70, HEIGHT / 2 + 70);
+            return;
+        }
+
         // Draw food
         g.setColor(Color.RED);
         g.fillRect(food.x * TILE_SIZE, food.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -46,7 +71,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
 
-        // 🔹 Draw score
+        // Draw score
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 16));
         g.drawString("Score: " + score, 10, 20);
@@ -54,6 +79,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (gameOver) return; // Stop updates if game over
+
         Point head = new Point(snake.get(0));
         switch (direction) {
             case "UP" -> head.y--;
@@ -65,24 +92,23 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         // Check collision with food
         if (head.equals(food)) {
             snake.add(0, head);
-            score++; // 🔹 Increase score
+            score++;
             spawnFood();
         } else {
             snake.add(0, head);
             snake.remove(snake.size() - 1);
         }
 
-        // Collision with walls
+        // Check collisions
         if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
+            gameOver = true;
             timer.stop();
-            JOptionPane.showMessageDialog(this, "Game Over!\nScore: " + score);
         }
 
-        // Collision with itself
         for (int i = 1; i < snake.size(); i++) {
             if (head.equals(snake.get(i))) {
+                gameOver = true;
                 timer.stop();
-                JOptionPane.showMessageDialog(this, "Game Over!\nScore: " + score);
             }
         }
 
@@ -91,18 +117,29 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP -> {
-                if (!direction.equals("DOWN")) direction = "UP";
+        if (!gameOver) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_UP -> {
+                    if (!direction.equals("DOWN")) direction = "UP";
+                }
+                case KeyEvent.VK_DOWN -> {
+                    if (!direction.equals("UP")) direction = "DOWN";
+                }
+                case KeyEvent.VK_LEFT -> {
+                    if (!direction.equals("RIGHT")) direction = "LEFT";
+                }
+                case KeyEvent.VK_RIGHT -> {
+                    if (!direction.equals("LEFT")) direction = "RIGHT";
+                }
             }
-            case KeyEvent.VK_DOWN -> {
-                if (!direction.equals("UP")) direction = "DOWN";
-            }
-            case KeyEvent.VK_LEFT -> {
-                if (!direction.equals("RIGHT")) direction = "LEFT";
-            }
-            case KeyEvent.VK_RIGHT -> {
-                if (!direction.equals("LEFT")) direction = "RIGHT";
+        } else {
+            // 🔹 Restart or Quit when Game Over
+            if (e.getKeyCode() == KeyEvent.VK_R) {
+                initGame();
+                timer.start();
+                repaint();
+            } else if (e.getKeyCode() == KeyEvent.VK_Q) {
+                System.exit(0);
             }
         }
     }
