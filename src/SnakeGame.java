@@ -13,21 +13,37 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private String direction = "RIGHT";
     private Timer timer;
     private int score = 0;
-    private int highScore = 0; // 🔹 High Score variable
+    private int highScore = 0;
     private boolean gameOver = false;
+
+    // 🔹 Mode: 1 = Classic, 2 = Free, 3 = Obstacle
+    private int mode = 1;
+
+    // Obstacle (for mode 3)
+    private Rectangle obstacle = new Rectangle(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
     public SnakeGame() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
+
+        // 🔹 Choose Mode
+        String[] options = {"Classic Mode", "Free Mode", "Obstacle Mode"};
+        int choice = JOptionPane.showOptionDialog(null, "Choose Game Mode:",
+                "Snake Game Modes", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, options, options[0]);
+
+        if (choice == 1) mode = 2;
+        else if (choice == 2) mode = 3;
+        else mode = 1;
+
         initGame();
 
-        timer = new Timer(200, this);
+        timer = new Timer(120, this); // Default speed
         timer.start();
         setFocusable(true);
         addKeyListener(this);
     }
 
-    // 🔹 Initialize or Restart the Game
     private void initGame() {
         snake.clear();
         snake.add(new Point(5, 5));
@@ -48,7 +64,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
 
         if (gameOver) {
-            // 🔹 Game Over Screen
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 30));
             g.drawString("GAME OVER", WIDTH / 2 - 90, HEIGHT / 2 - 40);
@@ -62,6 +77,12 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             return;
         }
 
+        // Draw obstacle if mode 3
+        if (mode == 3) {
+            g.setColor(Color.GRAY);
+            g.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+
         // Draw food
         g.setColor(Color.RED);
         g.fillRect(food.x * TILE_SIZE, food.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -72,7 +93,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
 
-        // Draw score and high score
+        // Draw score & high score
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 16));
         g.drawString("Score: " + score, 10, 20);
@@ -91,26 +112,45 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             case "RIGHT" -> head.x++;
         }
 
-        // Check collision with food
+        // Free mode: allow snake to pass walls
+        if (mode == 2) {
+            if (head.x < 0) head.x = WIDTH / TILE_SIZE - 1;
+            else if (head.x >= WIDTH / TILE_SIZE) head.x = 0;
+            if (head.y < 0) head.y = HEIGHT / TILE_SIZE - 1;
+            else if (head.y >= HEIGHT / TILE_SIZE) head.y = 0;
+        }
+
+        // Eating food
         if (head.equals(food)) {
             snake.add(0, head);
             score++;
-            if (score > highScore) highScore = score; // 🔹 Update high score
+            if (score > highScore) highScore = score;
             spawnFood();
         } else {
             snake.add(0, head);
             snake.remove(snake.size() - 1);
         }
 
-        // Check wall collision
-        if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
-            gameOver = true;
-            timer.stop();
+        // Wall collision (Classic + Obstacle modes)
+        if (mode != 2) {
+            if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
+                gameOver = true;
+                timer.stop();
+            }
         }
 
-        // Check self collision
+        // Self collision
         for (int i = 1; i < snake.size(); i++) {
             if (head.equals(snake.get(i))) {
+                gameOver = true;
+                timer.stop();
+            }
+        }
+
+        // Obstacle collision
+        if (mode == 3) {
+            Rectangle headRect = new Rectangle(head.x * TILE_SIZE, head.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            if (headRect.intersects(obstacle)) {
                 gameOver = true;
                 timer.stop();
             }
@@ -137,7 +177,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
                 }
             }
         } else {
-            // 🔹 Restart or Quit
             if (e.getKeyCode() == KeyEvent.VK_R) {
                 initGame();
                 timer.start();
