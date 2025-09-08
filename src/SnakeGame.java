@@ -21,7 +21,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setBackground(Color.BLACK);
         initGame();
 
-        timer = new Timer(100, this);
+        timer = new Timer(150, this);
         timer.start();
         setFocusable(true);
         addKeyListener(this);
