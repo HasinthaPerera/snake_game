@@ -27,6 +27,19 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private JButton restartBtn, menuBtn, quitBtn;
     private JFrame frame;
 
+    // 🔹 Custom rounded border for buttons
+    class RoundedBorder implements javax.swing.border.Border {
+        private int radius;
+        public RoundedBorder(int radius) { this.radius = radius; }
+        public Insets getBorderInsets(Component c) {
+            return new Insets(this.radius+1, this.radius+1, this.radius+2, this.radius);
+        }
+        public boolean isBorderOpaque() { return false; }
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            g.drawRoundRect(x, y, width-1, height-1, radius, radius);
+        }
+    }
+
     public SnakeGame(JFrame frame) {
         this.frame = frame;
 
@@ -55,6 +68,26 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         restartBtn.addActionListener(e -> restartGame());
         menuBtn.addActionListener(e -> backToMenu());
         quitBtn.addActionListener(e -> System.exit(0));
+
+        // 🎨 Style buttons with neon-like colors
+        styleButton(classicBtn, new Color(0, 255, 127), Color.BLACK);   // neon green
+        styleButton(freeBtn, new Color(0, 255, 255), Color.BLACK);      // cyan
+        styleButton(obstacleBtn, new Color(255, 179, 0), Color.BLACK);  // amber orange
+
+        styleButton(restartBtn, new Color(255, 215, 0), Color.BLACK);   // gold
+        styleButton(menuBtn, new Color(30, 144, 255), Color.BLACK);     // dodger blue
+        styleButton(quitBtn, new Color(255, 68, 68), Color.BLACK);      // red
+    }
+
+    // 🔹 Button Styling
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Arial", Font.BOLD, 16));
+        btn.setOpaque(true);
+        btn.setBorder(new RoundedBorder(15)); // rounded corners
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void startGame(int selectedMode) {
@@ -107,7 +140,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         // --- Playing state ---
         if (mode == 3) { // Draw obstacle
-            g.setColor(Color.GRAY);
+            g.setColor(Color.DARK_GRAY);
             g.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
         }
 
@@ -116,7 +149,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         g.fillRect(food.x * TILE_SIZE, food.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
         // Draw snake
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(0, 255, 127)); // neon green snake
         for (Point p : snake) {
             g.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
