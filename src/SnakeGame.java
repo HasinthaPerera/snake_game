@@ -22,7 +22,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     // Obstacle (for mode 3)
     private Rectangle obstacle = new Rectangle(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
-    public SnakeGame() {
+    // 🔹 Buttons
+    private JButton restartBtn, menuBtn, quitBtn;
+    private JFrame frame;
+
+    public SnakeGame(JFrame frame) {
+        this.frame = frame;
+
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
 
@@ -30,6 +36,15 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         timer.start();
         setFocusable(true);
         addKeyListener(this);
+
+        // Initialize buttons but don’t add yet
+        restartBtn = new JButton("Restart");
+        menuBtn = new JButton("Menu");
+        quitBtn = new JButton("Quit");
+
+        restartBtn.addActionListener(e -> restartGame());
+        menuBtn.addActionListener(e -> backToMenu());
+        quitBtn.addActionListener(e -> System.exit(0));
     }
 
     private void initGame(int selectedMode) {
@@ -40,6 +55,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         mode = selectedMode;
         spawnFood();
         state = 1; // Playing
+        hideButtons();
     }
 
     private void spawnFood() {
@@ -74,8 +90,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.drawString("Score: " + score, WIDTH / 2 - 50, HEIGHT / 2);
             g.drawString("High Score: " + highScore, WIDTH / 2 - 70, HEIGHT / 2 + 30);
 
-            g.drawString("Press M for Menu", WIDTH / 2 - 80, HEIGHT / 2 + 70);
-            g.drawString("Press Q to Quit", WIDTH / 2 - 70, HEIGHT / 2 + 100);
+            showButtons();
             return;
         }
 
@@ -136,16 +151,14 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         // Wall collision (Classic + Obstacle)
         if (mode != 2) {
             if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
-                state = 2; // Game Over
-                timer.stop();
+                gameOver();
             }
         }
 
         // Self collision
         for (int i = 1; i < snake.size(); i++) {
             if (head.equals(snake.get(i))) {
-                state = 2;
-                timer.stop();
+                gameOver();
             }
         }
 
@@ -153,12 +166,47 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         if (mode == 3) {
             Rectangle headRect = new Rectangle(head.x * TILE_SIZE, head.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             if (headRect.intersects(obstacle)) {
-                state = 2;
-                timer.stop();
+                gameOver();
             }
         }
 
         repaint();
+    }
+
+    private void gameOver() {
+        state = 2;
+        timer.stop();
+        repaint();
+    }
+
+    private void restartGame() {
+        initGame(mode);
+        timer.start();
+    }
+
+    private void backToMenu() {
+        state = 0;
+        hideButtons();
+        repaint();
+    }
+
+    private void showButtons() {
+        if (restartBtn.getParent() == null) {
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.setOpaque(false);
+            buttonPanel.add(restartBtn);
+            buttonPanel.add(menuBtn);
+            buttonPanel.add(quitBtn);
+            frame.add(buttonPanel, BorderLayout.SOUTH);
+            frame.revalidate();
+        }
+    }
+
+    private void hideButtons() {
+        frame.getContentPane().removeAll();
+        frame.add(this, BorderLayout.CENTER);
+        frame.revalidate();
+        frame.repaint();
     }
 
     @Override
@@ -189,13 +237,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
                     if (!direction.equals("LEFT")) direction = "RIGHT";
                 }
             }
-        } else if (state == 2) { // Game Over
-            if (e.getKeyCode() == KeyEvent.VK_M) {
-                state = 0; // Back to menu
-                repaint();
-            } else if (e.getKeyCode() == KeyEvent.VK_Q) {
-                System.exit(0);
-            }
         }
     }
 
@@ -206,8 +247,9 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Snake Game");
-        SnakeGame game = new SnakeGame();
-        frame.add(game);
+        SnakeGame game = new SnakeGame(frame);
+        frame.setLayout(new BorderLayout());
+        frame.add(game, BorderLayout.CENTER);
         frame.pack();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
