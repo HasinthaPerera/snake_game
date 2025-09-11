@@ -156,10 +156,19 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.RED);
         g.fillRect(food.x * TILE_SIZE, food.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
-        // Draw snake
-        g.setColor(new Color(0, 255, 127)); // neon green snake
+        // Draw neon snake
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setStroke(new BasicStroke(2));
         for (Point p : snake) {
-            g.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            int x = p.x * TILE_SIZE;
+            int y = p.y * TILE_SIZE;
+
+            // Glow effect: draw a semi-transparent rectangle around the snake
+            g2.setColor(new Color(0, 255, 127, 100));
+            g2.fillRect(x - 2, y - 2, TILE_SIZE + 4, TILE_SIZE + 4);
+
+            g2.setColor(new Color(0, 255, 127)); // main snake color
+            g2.fillRect(x, y, TILE_SIZE, TILE_SIZE);
         }
 
         // Draw score & high score
