@@ -15,19 +15,15 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private int score = 0;
     private int highScore = 0;
 
-    // Game states: 0 = Menu, 1 = Playing, 2 = Game Over
-    private int state = 0;
-    private int mode = 1; // 1 = Classic, 2 = Free, 3 = Obstacle
+    private int state = 0; // 0 = Menu, 1 = Playing, 2 = Game Over
+    private int mode = 1;  // 1 = Classic, 2 = Free, 3 = Obstacle
 
-    // Obstacle for mode 3
     private Rectangle obstacle = new Rectangle(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
-    // Buttons
     private JButton classicBtn, freeBtn, obstacleBtn;
     private JButton restartBtn, menuBtn, quitBtn;
     private JFrame frame;
 
-    // Custom rounded border for buttons
     class RoundedBorder implements javax.swing.border.Border {
         private int radius;
         public RoundedBorder(int radius) { this.radius = radius; }
@@ -51,7 +47,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         classicBtn = new JButton("Classic Mode");
         freeBtn = new JButton("Free Mode");
         obstacleBtn = new JButton("Obstacle Mode");
-
         classicBtn.addActionListener(e -> startGame(1));
         freeBtn.addActionListener(e -> startGame(2));
         obstacleBtn.addActionListener(e -> startGame(3));
@@ -60,22 +55,19 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         restartBtn = new JButton("Restart");
         menuBtn = new JButton("Menu");
         quitBtn = new JButton("Quit");
-
         restartBtn.addActionListener(e -> restartGame());
         menuBtn.addActionListener(e -> backToMenu());
         quitBtn.addActionListener(e -> System.exit(0));
 
-        // Style buttons with neon-like colors + hover effect
-        styleButton(classicBtn, new Color(0, 255, 127), Color.BLACK);   // neon green
-        styleButton(freeBtn, new Color(0, 255, 255), Color.BLACK);      // cyan
-        styleButton(obstacleBtn, new Color(255, 179, 0), Color.BLACK);  // amber orange
-
-        styleButton(restartBtn, new Color(255, 215, 0), Color.BLACK);   // gold
-        styleButton(menuBtn, new Color(30, 144, 255), Color.BLACK);     // dodger blue
-        styleButton(quitBtn, new Color(255, 68, 68), Color.BLACK);      // red
+        // Style buttons with neon + hover
+        styleButton(classicBtn, new Color(0, 255, 127), Color.BLACK);
+        styleButton(freeBtn, new Color(0, 255, 255), Color.BLACK);
+        styleButton(obstacleBtn, new Color(255, 179, 0), Color.BLACK);
+        styleButton(restartBtn, new Color(255, 215, 0), Color.BLACK);
+        styleButton(menuBtn, new Color(30, 144, 255), Color.BLACK);
+        styleButton(quitBtn, new Color(255, 68, 68), Color.BLACK);
     }
 
-    // Button Styling with hover glow effect
     private void styleButton(JButton btn, Color bg, Color fg) {
         btn.setBackground(bg);
         btn.setForeground(fg);
@@ -85,224 +77,151 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         btn.setBorder(new RoundedBorder(15));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Hover effect
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             Color originalBg = bg;
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btn.setBackground(bg.brighter());
-            }
+            public void mouseEntered(java.awt.event.MouseEvent e) { btn.setBackground(bg.brighter()); }
             @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btn.setBackground(originalBg);
-            }
+            public void mouseExited(java.awt.event.MouseEvent e) { btn.setBackground(originalBg); }
         });
     }
 
-    private void startGame(int selectedMode) {
-        initGame(selectedMode);
-        timer.start();
-    }
-
+    private void startGame(int selectedMode) { initGame(selectedMode); timer.start(); }
     private void initGame(int selectedMode) {
         snake.clear();
-        snake.add(new Point(5, 5));
+        snake.add(new Point(5,5));
         direction = "RIGHT";
         score = 0;
         mode = selectedMode;
         spawnFood();
-        state = 1; // Playing
+        state = 1;
         hideButtons();
     }
 
     private void spawnFood() {
-        int x = (int) (Math.random() * (WIDTH / TILE_SIZE));
-        int y = (int) (Math.random() * (HEIGHT / TILE_SIZE));
-        food = new Point(x, y);
+        int x = (int)(Math.random()*(WIDTH/TILE_SIZE));
+        int y = (int)(Math.random()*(HEIGHT/TILE_SIZE));
+        food = new Point(x,y);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
 
-        if (state == 0) { // Menu Screen
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 28));
-            g.drawString("SNAKE GAME", WIDTH / 2 - 90, HEIGHT / 2 - 120);
+        // Neon grid background
+        g2.setColor(new Color(0,255,127,30));
+        for (int x=0; x<WIDTH; x+=TILE_SIZE) g2.drawLine(x,0,x,HEIGHT);
+        for (int y=0; y<HEIGHT; y+=TILE_SIZE) g2.drawLine(0,y,WIDTH,y);
+
+        if(state==0) {
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("Arial",Font.BOLD,28));
+            g2.drawString("SNAKE GAME", WIDTH/2-90, HEIGHT/2-120);
             showMenuButtons();
             return;
         }
 
-        if (state == 2) { // Game Over Screen
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 30));
-            g.drawString("GAME OVER", WIDTH / 2 - 90, HEIGHT / 2 - 80);
-
-            g.setFont(new Font("Arial", Font.PLAIN, 20));
-            g.drawString("Score: " + score, WIDTH / 2 - 50, HEIGHT / 2 - 40);
-            g.drawString("High Score: " + highScore, WIDTH / 2 - 70, HEIGHT / 2 - 10);
-
+        if(state==2) {
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("Arial",Font.BOLD,30));
+            g2.drawString("GAME OVER", WIDTH/2-90, HEIGHT/2-80);
+            g2.setFont(new Font("Arial",Font.PLAIN,20));
+            g2.drawString("Score: "+score, WIDTH/2-50, HEIGHT/2-40);
+            g2.drawString("High Score: "+highScore, WIDTH/2-70, HEIGHT/2-10);
             showGameOverButtons();
             return;
         }
 
-        // Playing state
-        if (mode == 3) { // Draw obstacle
-            g.setColor(Color.DARK_GRAY);
-            g.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        }
+        // Obstacle
+        if(mode==3) { g2.setColor(Color.DARK_GRAY); g2.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height); }
 
-        // Draw food
-        g.setColor(Color.RED);
-        g.fillRect(food.x * TILE_SIZE, food.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        // Food
+        g2.setColor(Color.RED);
+        g2.fillRect(food.x*TILE_SIZE, food.y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
-        // Draw neon snake
-        Graphics2D g2 = (Graphics2D) g;
+        // Neon Snake
         g2.setStroke(new BasicStroke(2));
-        for (Point p : snake) {
-            int x = p.x * TILE_SIZE;
-            int y = p.y * TILE_SIZE;
-
-            // Glow effect: draw a semi-transparent rectangle around the snake
-            g2.setColor(new Color(0, 255, 127, 100));
-            g2.fillRect(x - 2, y - 2, TILE_SIZE + 4, TILE_SIZE + 4);
-
-            g2.setColor(new Color(0, 255, 127)); // main snake color
-            g2.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        for(Point p: snake) {
+            int x=p.x*TILE_SIZE, y=p.y*TILE_SIZE;
+            g2.setColor(new Color(0,255,127,100)); // glow
+            g2.fillRect(x-2,y-2,TILE_SIZE+4,TILE_SIZE+4);
+            g2.setColor(new Color(0,255,127));
+            g2.fillRect(x,y,TILE_SIZE,TILE_SIZE);
         }
 
-        // Draw score & high score
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 16));
-        g.drawString("Score: " + score, 10, 20);
-        g.drawString("High Score: " + highScore, WIDTH - 140, 20);
+        // Score
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Arial",Font.BOLD,16));
+        g2.drawString("Score: "+score,10,20);
+        g2.drawString("High Score: "+highScore, WIDTH-140,20);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (state != 1) return; // Only update if playing
-
+        if(state!=1) return;
         Point head = new Point(snake.get(0));
-        switch (direction) {
+        switch(direction) {
             case "UP" -> head.y--;
             case "DOWN" -> head.y++;
             case "LEFT" -> head.x--;
             case "RIGHT" -> head.x++;
         }
 
-        // Free mode (teleport through walls)
-        if (mode == 2) {
-            if (head.x < 0) head.x = WIDTH / TILE_SIZE - 1;
-            else if (head.x >= WIDTH / TILE_SIZE) head.x = 0;
-            if (head.y < 0) head.y = HEIGHT / TILE_SIZE - 1;
-            else if (head.y >= HEIGHT / TILE_SIZE) head.y = 0;
+        if(mode==2) { // Free mode teleport
+            if(head.x<0) head.x=WIDTH/TILE_SIZE-1; else if(head.x>=WIDTH/TILE_SIZE) head.x=0;
+            if(head.y<0) head.y=HEIGHT/TILE_SIZE-1; else if(head.y>=HEIGHT/TILE_SIZE) head.y=0;
         }
 
-        // Eating food
-        if (head.equals(food)) {
-            snake.add(0, head);
-            score++;
-            if (score > highScore) highScore = score;
-            spawnFood();
-        } else {
-            snake.add(0, head);
-            snake.remove(snake.size() - 1);
-        }
+        if(head.equals(food)) { snake.add(0,head); score++; if(score>highScore) highScore=score; spawnFood(); }
+        else { snake.add(0,head); snake.remove(snake.size()-1); }
 
-        // Wall collision (Classic + Obstacle)
-        if (mode != 2) {
-            if (head.x < 0 || head.x >= WIDTH / TILE_SIZE || head.y < 0 || head.y >= HEIGHT / TILE_SIZE) {
-                gameOver();
-            }
-        }
-
-        // Self collision
-        for (int i = 1; i < snake.size(); i++) {
-            if (head.equals(snake.get(i))) {
-                gameOver();
-            }
-        }
-
-        // Obstacle collision
-        if (mode == 3) {
-            Rectangle headRect = new Rectangle(head.x * TILE_SIZE, head.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            if (headRect.intersects(obstacle)) {
-                gameOver();
-            }
-        }
+        if(mode!=2 && (head.x<0 || head.x>=WIDTH/TILE_SIZE || head.y<0 || head.y>=HEIGHT/TILE_SIZE)) gameOver();
+        for(int i=1;i<snake.size();i++) if(head.equals(snake.get(i))) gameOver();
+        if(mode==3 && new Rectangle(head.x*TILE_SIZE, head.y*TILE_SIZE, TILE_SIZE, TILE_SIZE).intersects(obstacle)) gameOver();
 
         repaint();
     }
 
-    private void gameOver() {
-        state = 2;
-        timer.stop();
-        repaint();
-    }
-
-    private void restartGame() {
-        initGame(mode);
-        timer.start();
-    }
-
-    private void backToMenu() {
-        state = 0;
-        hideButtons();
-        repaint();
-    }
+    private void gameOver() { state=2; timer.stop(); repaint(); }
+    private void restartGame() { initGame(mode); timer.start(); }
+    private void backToMenu() { state=0; hideButtons(); repaint(); }
 
     private void showMenuButtons() {
         frame.getContentPane().removeAll();
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setOpaque(false);
-        buttonPanel.setLayout(new GridLayout(3, 1, 10, 10));
-        buttonPanel.add(classicBtn);
-        buttonPanel.add(freeBtn);
-        buttonPanel.add(obstacleBtn);
-
-        frame.add(this, BorderLayout.CENTER);
-        frame.add(buttonPanel, BorderLayout.SOUTH);
-        frame.revalidate();
-        frame.repaint();
+        JPanel panel = new JPanel(); panel.setOpaque(false); panel.setLayout(new GridLayout(3,1,10,10));
+        panel.add(classicBtn); panel.add(freeBtn); panel.add(obstacleBtn);
+        frame.add(this, BorderLayout.CENTER); frame.add(panel, BorderLayout.SOUTH);
+        frame.revalidate(); frame.repaint();
     }
 
     private void showGameOverButtons() {
         frame.getContentPane().removeAll();
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setOpaque(false);
-        buttonPanel.add(restartBtn);
-        buttonPanel.add(menuBtn);
-        buttonPanel.add(quitBtn);
-
-        frame.add(this, BorderLayout.CENTER);
-        frame.add(buttonPanel, BorderLayout.SOUTH);
-        frame.revalidate();
-        frame.repaint();
+        JPanel panel = new JPanel(); panel.setOpaque(false);
+        panel.add(restartBtn); panel.add(menuBtn); panel.add(quitBtn);
+        frame.add(this, BorderLayout.CENTER); frame.add(panel, BorderLayout.SOUTH);
+        frame.revalidate(); frame.repaint();
     }
 
     private void hideButtons() {
         frame.getContentPane().removeAll();
         frame.add(this, BorderLayout.CENTER);
-        frame.revalidate();
-        frame.repaint();
+        frame.revalidate(); frame.repaint();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (state == 1) {
-            switch (e.getKeyCode()) {
-                case KeyEvent.VK_UP -> { if (!direction.equals("DOWN")) direction = "UP"; }
-                case KeyEvent.VK_DOWN -> { if (!direction.equals("UP")) direction = "DOWN"; }
-                case KeyEvent.VK_LEFT -> { if (!direction.equals("RIGHT")) direction = "LEFT"; }
-                case KeyEvent.VK_RIGHT -> { if (!direction.equals("LEFT")) direction = "RIGHT"; }
+        if(state==1) {
+            switch(e.getKeyCode()) {
+                case KeyEvent.VK_UP -> { if(!direction.equals("DOWN")) direction="UP"; }
+                case KeyEvent.VK_DOWN -> { if(!direction.equals("UP")) direction="DOWN"; }
+                case KeyEvent.VK_LEFT -> { if(!direction.equals("RIGHT")) direction="LEFT"; }
+                case KeyEvent.VK_RIGHT -> { if(!direction.equals("LEFT")) direction="RIGHT"; }
             }
         }
     }
-
-    @Override
-    public void keyReleased(KeyEvent e) {}
-    @Override
-    public void keyTyped(KeyEvent e) {}
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Snake Game");
