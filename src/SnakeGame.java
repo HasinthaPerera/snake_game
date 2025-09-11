@@ -15,29 +15,25 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
     private int score = 0;
     private int highScore = 0;
 
-    // 🔹 Game states: 0 = Menu, 1 = Playing, 2 = Game Over
+    // Game states: 0 = Menu, 1 = Playing, 2 = Game Over
     private int state = 0;
     private int mode = 1; // 1 = Classic, 2 = Free, 3 = Obstacle
 
-    // Obstacle (for mode 3)
+    // Obstacle for mode 3
     private Rectangle obstacle = new Rectangle(WIDTH / 2 - 40, HEIGHT / 2 - 40, 80, 80);
 
-    // 🔹 Buttons
+    // Buttons
     private JButton classicBtn, freeBtn, obstacleBtn;
     private JButton restartBtn, menuBtn, quitBtn;
     private JFrame frame;
 
-    // 🔹 Custom rounded border for buttons
+    // Custom rounded border for buttons
     class RoundedBorder implements javax.swing.border.Border {
         private int radius;
         public RoundedBorder(int radius) { this.radius = radius; }
-        public Insets getBorderInsets(Component c) {
-            return new Insets(this.radius+1, this.radius+1, this.radius+2, this.radius);
-        }
+        public Insets getBorderInsets(Component c) { return new Insets(this.radius+1, this.radius+1, this.radius+2, this.radius); }
         public boolean isBorderOpaque() { return false; }
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            g.drawRoundRect(x, y, width-1, height-1, radius, radius);
-        }
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) { g.drawRoundRect(x, y, width-1, height-1, radius, radius); }
     }
 
     public SnakeGame(JFrame frame) {
@@ -51,7 +47,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         addKeyListener(this);
 
-        // --- Menu Buttons ---
+        // Menu Buttons
         classicBtn = new JButton("Classic Mode");
         freeBtn = new JButton("Free Mode");
         obstacleBtn = new JButton("Obstacle Mode");
@@ -60,7 +56,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         freeBtn.addActionListener(e -> startGame(2));
         obstacleBtn.addActionListener(e -> startGame(3));
 
-        // --- Game Over Buttons ---
+        // Game Over Buttons
         restartBtn = new JButton("Restart");
         menuBtn = new JButton("Menu");
         quitBtn = new JButton("Quit");
@@ -69,7 +65,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         menuBtn.addActionListener(e -> backToMenu());
         quitBtn.addActionListener(e -> System.exit(0));
 
-        // 🎨 Style buttons with neon-like colors
+        // Style buttons with neon-like colors + hover effect
         styleButton(classicBtn, new Color(0, 255, 127), Color.BLACK);   // neon green
         styleButton(freeBtn, new Color(0, 255, 255), Color.BLACK);      // cyan
         styleButton(obstacleBtn, new Color(255, 179, 0), Color.BLACK);  // amber orange
@@ -79,15 +75,28 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         styleButton(quitBtn, new Color(255, 68, 68), Color.BLACK);      // red
     }
 
-    // 🔹 Button Styling
+    // Button Styling with hover glow effect
     private void styleButton(JButton btn, Color bg, Color fg) {
         btn.setBackground(bg);
         btn.setForeground(fg);
         btn.setFocusPainted(false);
         btn.setFont(new Font("Arial", Font.BOLD, 16));
         btn.setOpaque(true);
-        btn.setBorder(new RoundedBorder(15)); // rounded corners
+        btn.setBorder(new RoundedBorder(15));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Hover effect
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            Color originalBg = bg;
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(bg.brighter());
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(originalBg);
+            }
+        });
     }
 
     private void startGame(int selectedMode) {
@@ -120,7 +129,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 28));
             g.drawString("SNAKE GAME", WIDTH / 2 - 90, HEIGHT / 2 - 120);
-
             showMenuButtons();
             return;
         }
@@ -138,7 +146,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
             return;
         }
 
-        // --- Playing state ---
+        // Playing state
         if (mode == 3) { // Draw obstacle
             g.setColor(Color.DARK_GRAY);
             g.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
@@ -234,7 +242,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         repaint();
     }
 
-    // --- Button Handlers ---
     private void showMenuButtons() {
         frame.getContentPane().removeAll();
         JPanel buttonPanel = new JPanel();
@@ -273,20 +280,12 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (state == 1) { // Playing
+        if (state == 1) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_UP -> {
-                    if (!direction.equals("DOWN")) direction = "UP";
-                }
-                case KeyEvent.VK_DOWN -> {
-                    if (!direction.equals("UP")) direction = "DOWN";
-                }
-                case KeyEvent.VK_LEFT -> {
-                    if (!direction.equals("RIGHT")) direction = "LEFT";
-                }
-                case KeyEvent.VK_RIGHT -> {
-                    if (!direction.equals("LEFT")) direction = "RIGHT";
-                }
+                case KeyEvent.VK_UP -> { if (!direction.equals("DOWN")) direction = "UP"; }
+                case KeyEvent.VK_DOWN -> { if (!direction.equals("UP")) direction = "DOWN"; }
+                case KeyEvent.VK_LEFT -> { if (!direction.equals("RIGHT")) direction = "LEFT"; }
+                case KeyEvent.VK_RIGHT -> { if (!direction.equals("LEFT")) direction = "RIGHT"; }
             }
         }
     }
