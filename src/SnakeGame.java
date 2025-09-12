@@ -61,8 +61,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
         // Style buttons with neon + hover
         styleButton(classicBtn, new Color(0, 255, 127), Color.BLACK);
-        styleButton(freeBtn, new Color(0, 255, 255), Color.BLACK);
-        styleButton(obstacleBtn, new Color(255, 179, 0), Color.BLACK);
+        styleButton(freeBtn, new Color(0, 191, 255), Color.BLACK);
+        styleButton(obstacleBtn, new Color(255, 140, 0), Color.BLACK);
         styleButton(restartBtn, new Color(255, 215, 0), Color.BLACK);
         styleButton(menuBtn, new Color(30, 144, 255), Color.BLACK);
         styleButton(quitBtn, new Color(255, 68, 68), Color.BLACK);
@@ -134,19 +134,28 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener {
         }
 
         // Obstacle
-        if(mode==3) { g2.setColor(Color.DARK_GRAY); g2.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height); }
+        if(mode==3) {
+            g2.setColor(Color.DARK_GRAY);
+            g2.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
 
         // Food
         g2.setColor(Color.RED);
         g2.fillRect(food.x*TILE_SIZE, food.y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
+        // Snake colors per mode
+        Color mainColor, glowColor;
+        if(mode==1) { mainColor=new Color(0,255,127); glowColor=new Color(0,255,127,100); }   // Green
+        else if(mode==2) { mainColor=new Color(0,191,255); glowColor=new Color(0,191,255,100); } // Blue
+        else { mainColor=new Color(255,140,0); glowColor=new Color(255,140,0,100); }            // Orange
+
         // Neon Snake
         g2.setStroke(new BasicStroke(2));
         for(Point p: snake) {
             int x=p.x*TILE_SIZE, y=p.y*TILE_SIZE;
-            g2.setColor(new Color(0,255,127,100)); // glow
+            g2.setColor(glowColor);
             g2.fillRect(x-2,y-2,TILE_SIZE+4,TILE_SIZE+4);
-            g2.setColor(new Color(0,255,127));
+            g2.setColor(mainColor);
             g2.fillRect(x,y,TILE_SIZE,TILE_SIZE);
         }
 
